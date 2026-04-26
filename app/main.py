@@ -16,7 +16,9 @@ from app.views.handler import (
 
 from routers import posts, users
 from database import engine
+
 from app.views import router as router_views
+from app.core.router import router as api_router
 
 
 @asynccontextmanager
@@ -34,6 +36,7 @@ app.mount("/media", StaticFiles(directory="media"), name="media")
 templates = Jinja2Templates(directory="templates")
 
 app.include_router(router_views)
+app.include_router(api_router)
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(posts.router, prefix="/api/posts", tags=["posts"])
 

@@ -1,10 +1,10 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.users import User
+from app.users.models import User
 from app.users.schemas import UserCreate, UserUpdate
 
-from helpers.auth import hash_password
+from app.helpers.auth import hash_password
 
 
 class UserRepository:

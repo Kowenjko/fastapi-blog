@@ -1,5 +1,6 @@
 import hashlib
 import secrets
+from typing import TYPE_CHECKING
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
@@ -7,12 +8,15 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from pwdlib import PasswordHash
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-import models
-from config import settings
-from database import get_db
+
+from app.core.config import settings
+from app.core.database import get_db
+from app.users.models import User
+
+if TYPE_CHECKING:
+    from app.users.repository import UserRepository
 
 password_hash = PasswordHash.recommended()
 
@@ -71,7 +75,7 @@ def verify_access_token(token: str) -> str | None:
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     db: Annotated[AsyncSession, Depends(get_db)],
-) -> models.User:
+) -> User:
     user_id = verify_access_token(token)
     if user_id is None:
         raise HTTPException(
@@ -89,10 +93,9 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    result = await db.execute(
-        select(models.User).where(models.User.id == user_id_int),
-    )
-    user = result.scalars().first()
+    repository = UserRepository(db)
+    user = await repository.get_by_id(user_id_int)
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -102,4 +105,4 @@ async def get_current_user(
     return user
 
 
-CurrentUser = Annotated[models.User, Depends(get_current_user)]
+CurrentUser = Annotated[User, Depends(get_current_user)]

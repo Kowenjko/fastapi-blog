@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.config import settings
 
-from app.users import UserService
+from app.users.services import UserService
 from app.users.schemas import UserPrivate, UserCreate
 
 
