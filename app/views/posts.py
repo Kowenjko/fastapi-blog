@@ -7,9 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 
-import models
-from config import settings
-from database import get_db
+from app.core import models
+from app.core.config import settings
+from app.core.database import get_db
 
 
 from app.core.config import settings

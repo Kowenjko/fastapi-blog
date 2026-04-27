@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     api: ApiPrefix = ApiPrefix()
     templates: TemplatesPrefix = TemplatesPrefix()
     jinja_templates: Jinja2Templates = Jinja2Templates(
-        directory="templates",
+        directory="app/templates",
     )
 
     database_url: str
