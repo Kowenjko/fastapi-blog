@@ -35,4 +35,5 @@ class UserService:
             )
 
         new_user = await self.repository.create(user_data)
+        await self.session.commit()
         return new_user

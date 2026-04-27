@@ -8,6 +8,8 @@ from app.core.config import settings
 from app.users.services import UserService
 from app.users.schemas import UserPrivate, UserCreate
 
+from app.utils.auth_utils import CurrentUser
+
 
 router = APIRouter(tags=["Users"])
 
@@ -16,3 +18,8 @@ router = APIRouter(tags=["Users"])
 async def create_user(user: UserCreate, db: Annotated[AsyncSession, Depends(get_db)]):
     user_service = UserService(db)
     return await user_service.create_user(user)
+
+
+@router.get("/me", response_model=UserPrivate)
+async def get_current_user(current_user: CurrentUser):
+    return current_user
