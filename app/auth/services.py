@@ -3,10 +3,16 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.users.repository import UserRepository
-from app.auth.schemas import Token, ForgotPasswordRequest, ResetPasswordRequest
+from app.auth.schemas import (
+    ChangePasswordRequest,
+    Token,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+)
 from app.auth.repository import AuthRepository
 
 from app.utils.auth_utils import (
+    CurrentUser,
     generate_reset_token,
     hash_password,
     hash_reset_token,
@@ -113,3 +119,22 @@ class AuthService:
         return {
             "message": "Password reset successfully. You can now log in with your new password.",
         }
+
+    async def change_password(
+        self,
+        password_data: ChangePasswordRequest,
+        current_user: CurrentUser,
+    ):
+        if not verify_password(
+            password_data.current_password, current_user.password_hash
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current password is incorrect",
+            )
+        current_user.password_hash = hash_password(password_data.new_password)
+
+        await self.auth_repository.delete_tokens_for_user(current_user.id)
+        await self.session.commit()
+
+        return {"message": "Password changed successfully"}
