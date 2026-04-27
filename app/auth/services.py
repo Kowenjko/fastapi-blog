@@ -3,17 +3,18 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.users.repository import UserRepository
-from app.auth.schemas import Token, ForgotPasswordRequest
+from app.auth.schemas import Token, ForgotPasswordRequest, ResetPasswordRequest
 from app.auth.repository import AuthRepository
 
 from app.utils.auth_utils import (
     generate_reset_token,
+    hash_password,
     hash_reset_token,
     verify_password,
     create_access_token,
 )
 from app.core.config import settings
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
 from app.utils.email_utils import send_password_reset_email
 
@@ -74,4 +75,41 @@ class AuthService:
 
         return {
             "message": "If an account exists with this email, you will receive password reset instructions.",
+        }
+
+    async def reset_password(
+        self,
+        request_data: ResetPasswordRequest,
+        session: AsyncSession,
+    ):
+        token_hash = hash_reset_token(request_data.token)
+
+        reset_token = await self.auth_repository.get_valid_reset_token(token_hash)
+
+        if not reset_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset token",
+            )
+        if reset_token.expires_at < datetime.now(UTC):
+            await self.auth_repository.delete_reset_token(reset_token)
+            await session.commit()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset token",
+            )
+
+        user = await self.auth_repository.get_user_by_reset_token(reset_token.user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset token",
+            )
+        user.password_hash = hash_password(request_data.new_password)
+
+        await self.auth_repository.delete_tokens_for_user(user.id)
+        await session.commit()
+
+        return {
+            "message": "Password reset successfully. You can now log in with your new password.",
         }

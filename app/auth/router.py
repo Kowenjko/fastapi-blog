@@ -9,7 +9,7 @@ from app.core.config import settings
 from app.users.models import User
 
 from app.auth.services import AuthService
-from app.auth.schemas import ForgotPasswordRequest, Token
+from app.auth.schemas import ForgotPasswordRequest, ResetPasswordRequest, Token
 
 router = APIRouter(tags=["Auth"])
 
@@ -31,3 +31,12 @@ async def forgot_password(
 ):
     auth_service = AuthService(db)
     return await auth_service.forgot_password(request_data, background_tasks)
+
+
+@router.post("/reset-password")
+async def reset_password(
+    request_data: ResetPasswordRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    auth_service = AuthService(db)
+    return await auth_service.reset_password(request_data, db)

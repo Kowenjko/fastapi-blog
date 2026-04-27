@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models import PasswordResetToken
 from app.users.schemas import UserCreate, UserUpdate
+from app.users.models import User
 
 from app.utils.auth_utils import hash_password
 from app.core.config import settings
@@ -36,3 +37,20 @@ class AuthRepository:
             await self.session.rollback()
             raise
         return reset_token
+
+    async def get_valid_reset_token(self, token_hash: str):
+        result = await self.session.execute(
+            select(PasswordResetToken).where(
+                PasswordResetToken.token_hash == token_hash,
+            ),
+        )
+        return result.scalars().first()
+
+    async def delete_reset_token(self, reset_token: PasswordResetToken):
+        await self.session.delete(reset_token)
+
+    async def get_user_by_reset_token(self, user_id: str):
+        result = await self.session.execute(
+            select(User).where(User.id == user_id),
+        )
+        return result.scalars().first()
