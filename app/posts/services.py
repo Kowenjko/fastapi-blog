@@ -1,19 +1,9 @@
-from fastapi import HTTPException, status, UploadFile
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.posts.models import Post
 from app.posts.repository import PostRepository
 from app.posts.schemas import PaginatedPostsResponse, PostCreate, PostResponse
-from app.users.models import User
-from app.users.repository import UserRepository
-from app.users.schemas import UserCreate, UserUpdate
-from app.utils.auth_utils import CurrentUser
-from app.utils.image_utils import delete_profile_image, process_profile_image
-
-from app.core.config import settings
-
-from PIL import UnidentifiedImageError
-from starlette.concurrency import run_in_threadpool
 
 
 class PostService:

@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Query, UploadFile, status, Depends
+from fastapi import APIRouter, Query, status, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -7,8 +7,6 @@ from app.core.config import settings
 
 from app.posts.schemas import PaginatedPostsResponse, PostCreate, PostResponse
 from app.posts.services import PostService
-from app.users.services import UserService
-from app.users.schemas import UserPrivate, UserCreate, UserUpdate
 
 from app.utils.auth_utils import CurrentUser
 
