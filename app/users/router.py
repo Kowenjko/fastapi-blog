@@ -21,7 +21,7 @@ async def get_user(user_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     return await user_service.get_by_id(user_id)
 
 
-@router.post("/", response_model=UserPrivate, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=UserPrivate, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserCreate, db: Annotated[AsyncSession, Depends(get_db)]):
     user_service = UserService(db)
     return await user_service.create_user(user)
