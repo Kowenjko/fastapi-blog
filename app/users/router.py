@@ -73,3 +73,13 @@ async def update_profile_image(
 ):
     user_service = UserService(db)
     return await user_service.update_image(user_id, file, current_user)
+
+
+@router.delete("/{user_id}/picture", response_model=UserPrivate)
+async def delete_user_picture(
+    user_id: int,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    user_service = UserService(db)
+    return await user_service.delete_image(user_id, current_user)

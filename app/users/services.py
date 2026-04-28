@@ -135,6 +135,25 @@ class UserService:
 
         return current_user
 
+    async def delete_image(self, user_id: int, current_user: CurrentUser):
+        await self._user_forbidden(user_id, current_user.id)
+
+        old_filename = current_user.image_file
+
+        if old_filename is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No profile picture to delete",
+            )
+
+        current_user.image_file = None
+        await self.session.commit()
+        await self.session.refresh(current_user)
+
+        delete_profile_image(old_filename)
+
+        return current_user
+
     # private helper methods
     async def _user_forbidden(self, user_id: int, current_user_id: int) -> bool:
         if user_id != current_user_id:
