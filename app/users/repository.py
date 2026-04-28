@@ -1,8 +1,11 @@
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.users.models import User
 from app.users.schemas import UserCreate, UserUpdate
+
+from app.posts.models import Post
 
 from app.utils.auth_utils import hash_password
 
@@ -49,5 +52,19 @@ class UserRepository:
 
         return new_user
 
-    async def update(self, user: User, data: UserUpdate):
-        pass
+    async def get_user_posts(self, user_id: int, limit: int = 10, skip: int = 0):
+        result = await self.session.execute(
+            select(Post)
+            .options(selectinload(Post.author))
+            .where(Post.user_id == user_id)
+            .order_by(Post.date_posted.desc())
+            .offset(skip)
+            .limit(limit),
+        )
+        return result.scalars().all()
+
+    async def total_posts(self, user_id: int) -> int:
+        result = await self.session.execute(
+            select(func.count()).select_from(Post).where(Post.user_id == user_id),
+        )
+        return result.scalar() or 0
