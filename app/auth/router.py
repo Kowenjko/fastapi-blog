@@ -1,12 +1,9 @@
 from typing import Annotated
-from fastapi import APIRouter, BackgroundTasks, status, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.config import settings
-
-from app.users.models import User
 
 from app.auth.services import AuthService
 from app.auth.schemas import (

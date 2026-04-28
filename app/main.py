@@ -7,7 +7,6 @@ import app.core.models
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 
-# from fastapi.templating import Jinja2Templates
 
 from starlette.exceptions import HTTPException as StarletteHTTPException
 

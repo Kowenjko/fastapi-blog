@@ -5,10 +5,12 @@ from pathlib import Path
 import httpx
 from sqlalchemy import delete, select, update
 
-import models
-from database import AsyncSessionLocal, engine
-from image_utils import PROFILE_PICS_DIR
-from main import app
+from app.auth.models import PasswordResetToken
+from app.posts.models import Post
+from app.users.models import User
+from app.core.database import AsyncSessionLocal, engine
+from app.utils.image_utils import PROFILE_PICS_DIR
+from app.main import app
 
 POPULATE_IMAGES_DIR = Path("populate_images")
 
@@ -243,9 +245,9 @@ async def clear_existing_data() -> None:
 
     # Clear database tables (order respects foreign keys)
     async with AsyncSessionLocal() as db:
-        await db.execute(delete(models.PasswordResetToken))
-        await db.execute(delete(models.Post))
-        await db.execute(delete(models.User))
+        await db.execute(delete(PasswordResetToken))
+        await db.execute(delete(Post))
+        await db.execute(delete(User))
         await db.commit()
     print("Cleared existing data")
 
@@ -254,7 +256,7 @@ async def update_post_dates() -> None:
     now = datetime.now(UTC)
 
     async with AsyncSessionLocal() as db:
-        result = await db.execute(select(models.Post).order_by(models.Post.id))
+        result = await db.execute(select(Post).order_by(Post.id))
         posts = result.scalars().all()
 
         if not posts:
@@ -262,8 +264,8 @@ async def update_post_dates() -> None:
 
         # First post (POST_44) is the oldest - ~90 days ago
         await db.execute(
-            update(models.Post)
-            .where(models.Post.id == posts[0].id)
+            update(Post)
+            .where(Post.id == posts[0].id)
             .values(date_posted=now - timedelta(days=90)),
         )
 
@@ -273,9 +275,7 @@ async def update_post_dates() -> None:
             hours_offset = (i * 7) % 24
             post_date = now - timedelta(days=days_ago, hours=hours_offset)
             await db.execute(
-                update(models.Post)
-                .where(models.Post.id == post.id)
-                .values(date_posted=post_date),
+                update(Post).where(Post.id == post.id).values(date_posted=post_date),
             )
 
         await db.commit()

@@ -2,7 +2,7 @@ from fastapi import HTTPException, status, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.posts.schemas import PaginatedPostsResponse, PostResponse
-from app.users.models import User
+
 from app.users.repository import UserRepository
 from app.users.schemas import UserCreate, UserUpdate
 from app.utils.auth_utils import CurrentUser

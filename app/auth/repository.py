@@ -4,10 +4,8 @@ from sqlalchemy import func, select, delete as sql_delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models import PasswordResetToken
-from app.users.schemas import UserCreate, UserUpdate
 from app.users.models import User
 
-from app.utils.auth_utils import hash_password
 from app.core.config import settings
 
 
