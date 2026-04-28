@@ -6,6 +6,7 @@ from app.users.models import User
 from app.users.repository import UserRepository
 from app.users.schemas import UserCreate, UserUpdate
 from app.utils.auth_utils import CurrentUser
+from app.utils.image_utils import delete_profile_image
 
 
 class UserService:
@@ -86,6 +87,16 @@ class UserService:
         await self.session.commit()
         await self.session.refresh(user)
         return user
+
+    async def delete_user(self, user_id: int, current_user_id: int):
+        await self._user_forbidden(user_id, current_user_id)
+        user = await self.get_by_id(user_id)
+        await self.repository.delete(user)
+        await self.session.commit()
+
+        old_filename = user.image_file
+        if old_filename:
+            delete_profile_image(old_filename)
 
     # private helper methods
     async def _user_forbidden(self, user_id: int, current_user_id: int) -> bool:

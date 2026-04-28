@@ -68,3 +68,11 @@ class UserRepository:
             select(func.count()).select_from(Post).where(Post.user_id == user_id),
         )
         return result.scalar() or 0
+
+    async def delete(self, user: User):
+        await self.session.delete(user)
+        try:
+            await self.session.flush()
+        except Exception:
+            await self.session.rollback()
+            raise
