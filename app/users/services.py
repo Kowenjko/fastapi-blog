@@ -1,4 +1,4 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.posts.schemas import PaginatedPostsResponse, PostResponse
@@ -6,7 +6,12 @@ from app.users.models import User
 from app.users.repository import UserRepository
 from app.users.schemas import UserCreate, UserUpdate
 from app.utils.auth_utils import CurrentUser
-from app.utils.image_utils import delete_profile_image
+from app.utils.image_utils import delete_profile_image, process_profile_image
+
+from app.core.config import settings
+
+from PIL import UnidentifiedImageError
+from starlette.concurrency import run_in_threadpool
 
 
 class UserService:
@@ -88,8 +93,8 @@ class UserService:
         await self.session.refresh(user)
         return user
 
-    async def delete_user(self, user_id: int, current_user_id: int):
-        await self._user_forbidden(user_id, current_user_id)
+    async def delete_user(self, user_id: int, current_user: CurrentUser):
+        await self._user_forbidden(user_id, current_user.id)
         user = await self.get_by_id(user_id)
         await self.repository.delete(user)
         await self.session.commit()
@@ -97,6 +102,38 @@ class UserService:
         old_filename = user.image_file
         if old_filename:
             delete_profile_image(old_filename)
+
+    async def update_image(
+        self, user_id: int, file: UploadFile, current_user: CurrentUser
+    ):
+        await self._user_forbidden(user_id, current_user.id)
+        content = await file.read()
+
+        if len(content) > settings.max_upload_size_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"File too large. Maximum size is {settings.max_upload_size_bytes // (1024 * 1024)}MB",
+            )
+
+        try:
+            new_filename = await run_in_threadpool(process_profile_image, content)
+        except UnidentifiedImageError as err:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid image file. Please upload a valid image (JPEG, PNG, GIF, WebP).",
+            ) from err
+
+        old_filename = current_user.image_file
+
+        current_user.image_file = new_filename
+
+        await self.session.commit()
+        await self.session.refresh(current_user)
+
+        if old_filename:
+            delete_profile_image(old_filename)
+
+        return current_user
 
     # private helper methods
     async def _user_forbidden(self, user_id: int, current_user_id: int) -> bool:

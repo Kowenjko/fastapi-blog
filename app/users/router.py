@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Query, status, Depends
+from fastapi import APIRouter, Query, UploadFile, status, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -62,3 +62,14 @@ async def delete_user(
 ):
     user_service = UserService(db)
     await user_service.delete_user(user_id, current_user.id)
+
+
+@router.patch("/{user_id}/picture", response_model=UserPrivate)
+async def update_profile_image(
+    user_id: int,
+    file: UploadFile,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    user_service = UserService(db)
+    return await user_service.update_image(user_id, file, current_user)
