@@ -16,9 +16,7 @@ class AuthRepository:
 
     async def delete_tokens_for_user(self, user_id: int):
         await self.session.execute(
-            sql_delete(PasswordResetToken).where(
-                func.lower(PasswordResetToken.user_id) == user_id.lower()
-            )
+            sql_delete(PasswordResetToken).where(PasswordResetToken.user_id == user_id)
         )
 
     async def create_password_reset_token(self, user_id: int, token_hash: str):
@@ -29,12 +27,12 @@ class AuthRepository:
             user_id=user_id, token_hash=token_hash, expires_at=expires_at
         )
         self.session.add(reset_token)
-        try:
-            await self.session.flush()
-        except Exception:
-            await self.session.rollback()
-            raise
-        return reset_token
+        # try:
+        #     await self.session.flush()
+        # except Exception:
+        #     await self.session.rollback()
+        #     raise
+        # return reset_token
 
     async def get_valid_reset_token(self, token_hash: str):
         result = await self.session.execute(

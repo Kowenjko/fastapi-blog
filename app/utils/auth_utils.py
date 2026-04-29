@@ -2,12 +2,13 @@ import hashlib
 import secrets
 
 from datetime import UTC, datetime, timedelta
-from typing import Annotated, TYPE_CHECKING
+from typing import Annotated
 
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from pwdlib import PasswordHash
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -15,11 +16,6 @@ from app.core.config import settings
 from app.core.database import get_db
 
 from app.users.models import User
-
-
-if TYPE_CHECKING:
-    from app.users.repository import UserRepository
-
 
 password_hash = PasswordHash.recommended()
 
@@ -96,8 +92,10 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    repository = UserRepository(db)
-    user = await repository.get_by_id(user_id_int)
+    result = await db.execute(
+        select(User).where(User.id == user_id_int),
+    )
+    user = result.scalars().first()
 
     if not user:
         raise HTTPException(

@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,7 +26,7 @@ async def login_for_access_token(
     return await auth_service.authenticate_user(form_data)
 
 
-@router.post("/forgot-password")
+@router.post("/forgot-password", status_code=status.HTTP_202_ACCEPTED)
 async def forgot_password(
     request_data: ForgotPasswordRequest,
     background_tasks: BackgroundTasks,
@@ -36,7 +36,7 @@ async def forgot_password(
     return await auth_service.forgot_password(request_data, background_tasks)
 
 
-@router.post("/reset-password")
+@router.post("/reset-password", status_code=status.HTTP_200_OK)
 async def reset_password(
     request_data: ResetPasswordRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -45,7 +45,7 @@ async def reset_password(
     return await auth_service.reset_password(request_data, db)
 
 
-@router.post("/me/password")
+@router.patch("/me/password", status_code=status.HTTP_200_OK)
 async def change_password(
     password_data: ChangePasswordRequest,
     current_user: CurrentUser,

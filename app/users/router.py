@@ -15,6 +15,11 @@ from app.utils.auth_utils import CurrentUser
 router = APIRouter(tags=["Users"])
 
 
+@router.get("/me", response_model=UserPrivate)
+async def get_current_user(current_user: CurrentUser):
+    return current_user
+
+
 @router.get("/{user_id}", response_model=UserPrivate)
 async def get_user(user_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     user_service = UserService(db)
@@ -25,11 +30,6 @@ async def get_user(user_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
 async def create_user(user: UserCreate, db: Annotated[AsyncSession, Depends(get_db)]):
     user_service = UserService(db)
     return await user_service.create_user(user)
-
-
-@router.get("/me", response_model=UserPrivate)
-async def get_current_user(current_user: CurrentUser):
-    return current_user
 
 
 @router.get("/{user_id}/posts", response_model=PaginatedPostsResponse)
@@ -61,7 +61,7 @@ async def delete_user(
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     user_service = UserService(db)
-    await user_service.delete_user(user_id, current_user.id)
+    await user_service.delete_user(user_id, current_user)
 
 
 @router.patch("/{user_id}/picture", response_model=UserPrivate)
